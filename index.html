@@ -28,7 +28,14 @@
     <section class="menu-section">
       <h2 class="section-title">🍓 Morangos Cravejados</h2>
       <div class="products-grid">
-        <button type="button" class="product-card" data-product="Morango cravejado maracujá"><img class="product-image" src="https://images.unsplash.com/photo-1518635017498-87f514b751ba?auto=format&fit=crop&w=700&q=80" alt="Morango cravejado maracujá"><span class="product-info"><span class="product-name">Morango cravejado maracujá</span><span class="product-price">R$ 16,00</span><span class="click-to-order">Clique para pedir pelo WhatsApp</span></span></button>
+        <button type="button" class="product-card" data-product="Morango cravejado maracujá">
+          <img
+          class="product-image"
+          src="imgs/morango-cravejado-maracuja-1.jpeg"
+          data-images="imgs/morango-cravejado-maracuja-1.jpeg,imgs/morango-cravejado-maracuja-2.jpeg,imgs/morango-cravejado-maracuja-3.jpeg"
+          alt="Morango cravejado maracujá">
+          
+          <span class="product-info"><span class="product-name">Morango cravejado maracujá</span><span class="product-price">R$ 16,00</span><span class="click-to-order">Clique para pedir pelo WhatsApp</span></span></button>
         <button type="button" class="product-card" data-product="Morango cravejado ninho"><img class="product-image" src="https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?auto=format&fit=crop&w=700&q=80" alt="Morango cravejado ninho"><span class="product-info"><span class="product-name">Morango cravejado ninho</span><span class="product-price">R$ 15,00</span><span class="click-to-order">Clique para pedir pelo WhatsApp</span></span></button>
       </div>
     </section>
@@ -100,7 +107,10 @@
 
     document.querySelectorAll('.product-card').forEach((card) => {
       const image = card.querySelector('.product-image');
-      const images = [image.src, ...availableImages.filter((source) => source !== image.src)].slice(0, 3);
+      const images = image.dataset.images
+        .split(',')
+        .map((source) => source.trim())
+        .slice(0, 3);
 
       if (images.length > 1) {
         const indicators = document.createElement('span');
