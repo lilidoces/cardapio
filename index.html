@@ -212,16 +212,33 @@
     </a>
   </footer>
 
-  <a class="whatsapp-float" href="https://wa.me/5511989360383?text=Ol%C3%A1%2C%20vim%20pelo%20card%C3%A1pio%20da%20Lili%20Doces%20e%20gostaria%20de%20fazer%20um%20pedido!" target="_blank" rel="noopener noreferrer" aria-label="Fazer pedido pelo WhatsApp">
+  <button type="button" class="whatsapp-float" id="whatsapp-order" aria-label="Enviar produtos selecionados pelo WhatsApp">
     <svg class="whatsapp-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3C8.83 3 3 8.83 3 16c0 2.3.6 4.54 1.75 6.5L3 29l6.68-1.7A12.93 12.93 0 0 0 16 29c7.17 0 13-5.83 13-13S23.17 3 16 3Zm0 23.62c-2.02 0-3.99-.54-5.7-1.56l-.4-.24-3.96 1.01 1.06-3.86-.26-.4A10.57 10.57 0 0 1 5.12 16c0-5.99 4.88-10.88 10.88-10.88S26.88 10.01 26.88 16 22 26.62 16 26.62Zm5.97-8.15c-.33-.17-1.95-.96-2.25-1.07-.3-.11-.52-.17-.74.17-.22.33-.85 1.07-1.04 1.29-.19.22-.39.24-.72.08-1.95-.97-3.23-1.73-4.52-3.92-.34-.59.34-.55.97-1.84.11-.22.06-.41-.03-.58-.08-.17-.74-1.78-1.01-2.44-.27-.64-.54-.55-.74-.56h-.63c-.22 0-.58.08-.88.41-.3.33-1.15 1.12-1.15 2.73s1.18 3.17 1.34 3.39c.17.22 2.32 3.54 5.61 4.97.78.34 1.39.54 1.87.69.79.25 1.51.21 2.08.13.64-.1 1.95-.8 2.23-1.57.27-.77.27-1.43.19-1.57-.08-.14-.3-.22-.63-.39Z"/></svg>
-    <span class="whatsapp-label">Pedir pelo WhatsApp</span>
-  </a>
+    <span class="whatsapp-label">Pedir selecionados pelo WhatsApp</span>
+    <span class="selected-count" aria-live="polite">0</span>
+  </button>
 
   <script>
     const whatsappNumber = '5511989360383';
     const initialMessage = 'Olá, vim pelo cardápio da Lili Doces e gostaria de fazer um pedido!';
+    const selectedProducts = new Set();
+    const whatsappOrderButton = document.querySelector('#whatsapp-order');
+
+    const updateOrderButton = () => {
+      const selectedCount = selectedProducts.size;
+      whatsappOrderButton.querySelector('.selected-count').textContent = selectedCount;
+      whatsappOrderButton.classList.toggle('has-products', selectedCount > 0);
+    };
 
     document.querySelectorAll('.product-card').forEach((card) => {
+      card.setAttribute('aria-pressed', 'false');
+      card.setAttribute('aria-label', `Selecionar ${card.dataset.product}`);
+
+      const selectionMark = document.createElement('span');
+      selectionMark.className = 'selection-mark';
+      selectionMark.setAttribute('aria-hidden', 'true');
+      card.prepend(selectionMark);
+
       const image = card.querySelector('.product-image');
       const images = image.dataset.images
         .split(',')
@@ -252,10 +269,29 @@
 
       card.addEventListener('click', () => {
         const product = card.dataset.product;
-        const message = `${initialMessage}\n\n${product}`;
-        const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-        window.open(url, '_blank', 'noopener,noreferrer');
+        const isSelected = selectedProducts.has(product);
+
+        if (isSelected) {
+          selectedProducts.delete(product);
+        } else {
+          selectedProducts.add(product);
+        }
+
+        card.setAttribute('aria-pressed', String(!isSelected));
+        updateOrderButton();
       });
+    });
+
+    whatsappOrderButton.addEventListener('click', () => {
+      if (!selectedProducts.size) {
+        window.alert('Selecione pelo menos um produto para fazer o pedido.');
+        return;
+      }
+
+      const products = [...selectedProducts].map((product) => `- ${product}`).join('\n');
+      const message = `${initialMessage}\n\nGostaria de pedir:\n${products}`;
+      const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+      window.open(url, '_blank', 'noopener,noreferrer');
     });
   </script>
 </body>
@@ -455,6 +491,44 @@
         outline: none;
     }
 
+    .product-card[aria-pressed="true"] {
+      border-color: var(--pink);
+      box-shadow: 0 18px 38px rgba(217, 27, 131, .28);
+    }
+
+    .selection-mark {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      z-index: 2;
+      display: grid;
+      width: 27px;
+      height: 27px;
+      place-items: center;
+      border: 2px solid var(--white);
+      border-radius: 7px;
+      background: rgba(51, 35, 56, .4);
+      box-shadow: 0 2px 6px rgba(51, 35, 56, .2);
+      transition: background .2s ease, transform .2s ease;
+    }
+
+    .selection-mark::after {
+      width: 7px;
+      height: 13px;
+      border-right: 3px solid var(--white);
+      border-bottom: 3px solid var(--white);
+      content: '';
+      opacity: 0;
+      transform: rotate(45deg) translate(-1px, -1px);
+    }
+
+    .product-card[aria-pressed="true"] .selection-mark {
+      background: var(--pink);
+      transform: scale(1.08);
+    }
+
+    .product-card[aria-pressed="true"] .selection-mark::after { opacity: 1; }
+
     .product-image {
         width: 100%;
         height: 205px;
@@ -598,7 +672,20 @@
     }
 
     .whatsapp-float:hover { transform: scale(1.05); filter: brightness(.95); }
+      .whatsapp-float:disabled { cursor: not-allowed; opacity: .72; }
     .whatsapp-icon { width: 25px; height: 25px; fill: currentColor; }
+      .selected-count {
+        display: grid;
+        min-width: 24px;
+        height: 24px;
+        padding: 0 6px;
+        place-items: center;
+        border-radius: 999px;
+        color: var(--whatsapp);
+        background: var(--white);
+        font-size: .85rem;
+        line-height: 1;
+      }
 
     @media (max-width: 520px) {
         .announcement { font-size: .8rem; }
@@ -609,6 +696,7 @@
         .section-title { margin-bottom: 25px; padding-right: 8px; padding-left: 8px; }
         .whatsapp-float { right: 16px; bottom: 16px; padding: 14px; }
         .whatsapp-label { display: none; }
+        .selected-count { min-width: 23px; height: 23px; }
         .product-image { height: 220px; }
         .instagram-link { top: 28px; right: 16px; width: 44px; height: 44px; transform: none; }
         .instagram-link:hover { transform: scale(1.08); }
